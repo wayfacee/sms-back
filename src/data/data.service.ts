@@ -102,8 +102,6 @@ export class DataService {
         return filter5SIMData(data as Country5SIMInfo);
       case 'sms-man':
         return filterSmsManData(data as SmsManData, desiredServices, country);
-      case 'getsms':
-        return filterSmsManData(data as SmsManData, desiredServices, country);
       default:
         return filterResponseData(data as CountryInfo, desiredServices);
     }
