@@ -1,10 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AxiosResponse } from 'axios';
-import { type CountryInfo } from './interfaces/country-info.interface';
+import {
+  Country5SIMInfo,
+  SmsManData,
+  type CountryInfo,
+} from './interfaces/country-info.interface';
 import { ServiceConfig } from './interfaces/service-config.interface';
 import { HttpService } from '@nestjs/axios';
 import { countryMappings } from './constants/country-mappings';
+import {
+  filter5SIMData,
+  filterGetSmsData,
+  filterResponseData,
+  filterSmsLiveData,
+  filterSmsManData,
+} from './services/data-filters';
+import { getServiceConfigs } from './constants/service-configs';
 
 @Injectable()
 export class DataService {
@@ -14,62 +26,7 @@ export class DataService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.serviceConfigs = [
-      {
-        name: '365sms',
-        url: 'https://365sms.ru/stubs/handler_api.php', // id
-        apiKey: this.configService.get<string>('VITE_365SMS'),
-      },
-      {
-        name: 'sms-man',
-        url: 'https://api.sms-man.com/stubs/handler_api.php', // id
-        apiKey: this.configService.get<string>('VITE_SMS_MAN'), // передаются фулл страны, если его нет в списке
-      },
-      {
-        name: 'sms-activate',
-        url: 'https://api.sms-activate.guru/stubs/handler_api.php', // id
-        apiKey: this.configService.get<string>('VITE_SMS_ACTIVATE'),
-      },
-      {
-        name: '7grizzly',
-        url: 'https://api.7grizzlysms.com/stubs/handler_api.php', // id
-        apiKey: this.configService.get<string>('VITE_1GRIZZ'),
-      },
-      {
-        name: 'getsms',
-        url: 'http://api.getsms.online/stubs/handler_api.php', // id
-        apiKey: this.configService.get<string>('VITE_GET_SMS'), // ru kz done, возв. тока стоимость
-        // action: 'getNumbersStatus',
-      },
-      {
-        name: 'smslive',
-        url: 'https://smslive.pro/stubs/handler_api.php', // id
-        apiKey: this.configService.get<string>('VITE_SMSLIVE'), // возвращает нескока цен + кол-во
-        // action: 'getNumbersStatus',
-      },
-      {
-        name: '5sim',
-        url: 'https://5sim.net/v1/guest/prices', // возвращ. данные с оператором
-        apiKey: this.configService.get<string>('VITE_5SIM'), // ?country=$country&product=$product
-      },
-      // {
-      //   name: 'onlinesim', нет апи доки
-      //   url: 'https://onlinesim.io/ru',
-      //   apiKey: this.configService.get<string>('VITE_ONLINE_SIM'),
-      // },
-      // {
-      //   name: 'ironsim', facebook
-      //   url: 'https://ironsim.com/',
-      //   apiKey: this.configService.get<string>('VITE_IRONSIM'),
-      // },
-      // {
-      //   name: 'cheapsms',
-      //   url: 'http://cheapsms.pro/stubs/handler_api.php',
-      //   // ?api_key=$api_key&action=getNumbersStatus&country=$country
-      //   // апи не работает
-      //   apiKey: this.configService.get<string>('VITE_CHEAPSMS'),
-      // },
-    ];
+    this.serviceConfigs = getServiceConfigs(this.configService);
   }
 
   private getCountryId(
@@ -114,16 +71,12 @@ export class DataService {
         .toPromise()
         .then((response: AxiosResponse<CountryInfo>) => ({
           name: config.name,
-          data:
-            config.name === 'getsms'
-              ? this.filterGetSmsData(response.data, desiredServices, country)
-              : config.name === 'smslive'
-                ? this.filterSmsLiveData(
-                    response.data,
-                    desiredServices,
-                    countryParam,
-                  )
-                : this.filterResponseData(response.data, desiredServices),
+          data: this.filterData(
+            config.name,
+            response.data,
+            desiredServices,
+            countryParam,
+          ),
         }))
         .catch((error) => {
           console.error(`Error fetching from ${config.name}:`, error.message);
@@ -134,80 +87,25 @@ export class DataService {
     return Promise.all(requests);
   }
 
-  private filterGetSmsData(
-    data: CountryInfo,
-    desiredServices: string[],
-    country?: string,
-  ) {
-    return Object.entries(data)
-      .filter(
-        ([countryKey]) =>
-          !country || countryKey === this.getCountryId('getsms', country),
-      )
-      .map(([countryKey, services]) => ({
-        country: countryKey,
-        services: Object.entries(services)
-          .filter(
-            ([service, priceInfo]) =>
-              desiredServices.includes(service) &&
-              priceInfo.count > 0 &&
-              priceInfo.cost > 0,
-          )
-          .map(([service, priceInfo]) => ({
-            service,
-            cost: Math.ceil(priceInfo.cost),
-            count: priceInfo.count,
-          })),
-      }));
-  }
-
-  private filterSmsLiveData(
-    data: CountryInfo,
+  private filterData(
+    serviceName: string,
+    data: CountryInfo | Country5SIMInfo | SmsManData,
     desiredServices: string[],
     country: string,
   ) {
-    return Object.entries(data)
-      .filter(([countryCode]) => countryCode === country)
-      .map(([countryCode, services]) => ({
-        country: countryCode,
-        services: Object.entries(services)
-          .filter(([service, priceInfo]) => desiredServices.includes(service))
-          .map(([service, priceInfo]) => {
-            const [firstCost, firstCount] =
-              Object.entries(priceInfo).find(
-                ([cost, count]) => count > 0 && Number(cost) > 0,
-              ) || [];
-
-            return firstCost && firstCount
-              ? {
-                  service,
-                  cost: Math.ceil(Number(firstCost)),
-                  count: firstCount,
-                }
-              : null;
-          })
-          .filter((serviceData) => serviceData !== null),
-      }))
-      .filter((countryData) => countryData.services.length > 0);
-  }
-
-  private filterResponseData(data: CountryInfo, desiredServices: string[]) {
-    return Object.entries(data)
-      .map(([country, services]) => ({
-        country,
-        services: Object.entries(services)
-          .filter(
-            ([service, priceInfo]) =>
-              desiredServices.includes(service) &&
-              priceInfo.count > 0 &&
-              priceInfo.cost > 0,
-          )
-          .map(([service, priceInfo]) => ({
-            service,
-            cost: Math.ceil(priceInfo.cost),
-            count: priceInfo.count,
-          })),
-      }))
-      .filter((countryData) => countryData.services.length > 0);
+    switch (serviceName) {
+      case 'getsms':
+        return filterGetSmsData(data as CountryInfo, desiredServices, country);
+      case 'smslive':
+        return filterSmsLiveData(data as CountryInfo, desiredServices, country);
+      case '5sim':
+        return filter5SIMData(data as Country5SIMInfo);
+      case 'sms-man':
+        return filterSmsManData(data as SmsManData, desiredServices, country);
+      case 'getsms':
+        return filterSmsManData(data as SmsManData, desiredServices, country);
+      default:
+        return filterResponseData(data as CountryInfo, desiredServices);
+    }
   }
 }
