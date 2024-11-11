@@ -44,12 +44,12 @@ export class DataService {
 
     const requests = this.serviceConfigs.map((config) => {
       const countryParam = this.getCountryId(config.name, country);
-      console.log(config.name, countryParam, country);
+      // console.log(config.name, countryParam, country);
 
       if (!countryParam) {
-        console.log(
-          `Country "${country}" not found in mapping for service ${config.name}. Returning data: null.`,
-        );
+        // console.log(
+        // `Country "${country}" not found in mapping for service ${config.name}. Returning data: null.`,
+        // );
         return { name: config.name, data: null };
       }
 
