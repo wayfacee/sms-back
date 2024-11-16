@@ -50,11 +50,9 @@ export class DataService {
   }
 
   async getFilteredData(
-    service: string | null,
+    service: string | "tg" = "tg",
     country: string | "Россия" = "Россия",
   ): Promise<any[]> {
-    // const desiredServices = ["tg", "ig", "vk", "wa", "go", "vb", "ds"];
-
     const requests = this.serviceConfigs.map(async (config) => {
       const countryParam = this.getCountryId(config.name, country);
 
