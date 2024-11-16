@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { AxiosResponse } from "axios";
 import { HttpService } from "@nestjs/axios";
 import { countryMappings } from "./constants/country-mappings";
 import {
@@ -9,10 +10,7 @@ import {
   filterSmsakData,
   filter5SIMData,
 } from "./services/data-filters";
-import {
-  desiredServices,
-  getServiceConfigs,
-} from "./constants/service-configs";
+import { getServiceConfigs } from "./constants/service-configs";
 import { getSmsData } from "./services/get-sms/get-sms-func";
 import type {
   Country5SIMInfo,
@@ -25,7 +23,6 @@ import type { ServiceConfig } from "./interfaces/service-config.interface";
 @Injectable()
 export class DataService {
   private readonly serviceConfigs: ServiceConfig[];
-  private readonly cache = new Map<string, any>(); // Мемоизация запросов
 
   constructor(
     private readonly httpService: HttpService,
@@ -41,19 +38,11 @@ export class DataService {
     return countryMappings[serviceName]?.[country];
   }
 
-  private generateCacheKey(
-    serviceName: string,
-    country: string,
-    service: string | null,
-  ): string {
-    return `${serviceName}-${country}-${service || "all"}`;
-  }
-
   async getFilteredData(
     service: string | null,
     country: string | "Россия" = "Россия",
   ): Promise<any[]> {
-    // const desiredServices = ["tg", "ig", "vk", "wa", "go", "vb", "ds"];
+    const desiredServices = ["tg", "ig", "vk", "wa", "go", "vb", "ds"];
 
     const requests = this.serviceConfigs.map(async (config) => {
       const countryParam = this.getCountryId(config.name, country);
@@ -65,34 +54,21 @@ export class DataService {
         return { name: config.name, data: null };
       }
 
-      // Генерация ключа кэша
-      const cacheKey = this.generateCacheKey(
-        config.name,
-        countryParam,
-        service,
-      );
-
-      // Если запрос уже кэширован, вернуть кэшированные данные
-      if (this.cache.has(cacheKey)) {
-        return { name: config.name, data: this.cache.get(cacheKey) };
-      }
-
-      let responseData;
       if (config.name === "get-sms") {
-        responseData = await getSmsData(
+        const services = await getSmsData(
           this.httpService,
           this.configService,
           countryParam,
           service,
         );
-        const filteredData = { country: countryParam, services: responseData };
-        this.cache.set(cacheKey, filteredData); // Сохранение в кэш
-        return { name: config.name, data: filteredData };
+        return {
+          name: config.name,
+          data: { country: countryParam, services },
+        };
       }
 
       const url =
         config.name === "smsak" ? `${config.url}/${config.apiKey}` : config.url;
-
       const params =
         config.name === "smsak"
           ? { code: countryParam }
@@ -114,16 +90,16 @@ export class DataService {
           })
           .toPromise();
 
-        responseData = this.filterData(
-          config.name,
-          response.data,
-          desiredServices,
-          countryParam,
-          service,
-        );
-
-        this.cache.set(cacheKey, responseData); // Сохранение в кэш
-        return { name: config.name, data: responseData };
+        return {
+          name: config.name,
+          data: this.filterData(
+            config.name,
+            response.data,
+            desiredServices,
+            countryParam,
+            service,
+          ),
+        };
       } catch (error) {
         console.error(`Error fetching from "${config.name}":`, error.message);
         return { name: config.name, data: null };
