@@ -14,9 +14,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const allowedOrigins = [
-    'https://sssssssssssss-beta.vercel.app',
+    'https://sssssssssssss-theta.vercel.app',
     'https://sssssssssssss-git-main-wildeshhhs-projects.vercel.app',
-    'https://sssssssssssss-bvfn2enil-wildeshhhs-projects.vercel.app',
+    'https://sssssssssssss-jyi1qt58s-wildeshhhs-projects.vercel.app',
   ];
   
   app.enableCors({
