@@ -106,7 +106,6 @@ export class DataService {
           .get<CountryInfo>(url, {
             params,
             headers: {
-              "X-API-Key": config.apiKey,
               Authorization: `Bearer ${config.apiKey}`,
               Accept: "application/json",
             },
