@@ -7,6 +7,14 @@ export interface CountryInfo {
   };
 }
 
+export interface SmsHubData {
+  [country: string]: {
+    [service: string]: {
+      [cost: string]: number;
+    };
+  };
+}
+
 export interface Country5SIMInfo {
   [country: string]: {
     [service: string]: {

@@ -9,12 +9,14 @@ import { FiteredGetSmsPrices, getSmsPrices } from "./get-sms-prices";
 const filterGetSmsData = (
   numberStatus: FilteredGetSmsNS[],
   prices: FiteredGetSmsPrices[],
-  serviceName?: string
+  serviceName?: string,
 ) => {
   const uniqueResults = new Set<string>();
 
   return numberStatus.flatMap((status) => {
-    const countryPrices = prices.find((price) => price.country === status.country);
+    const countryPrices = prices.find(
+      (price) => price.country === status.country,
+    );
 
     if (!countryPrices) return [];
 
@@ -23,7 +25,8 @@ const filterGetSmsData = (
         if (serviceName && priceInfo.service !== serviceName) return null;
 
         const matchingStatus = numberStatus.find(
-          (ns) => ns.country === status.country && ns.service === priceInfo.service
+          (ns) =>
+            ns.country === status.country && ns.service === priceInfo.service,
         );
 
         if (matchingStatus) {
@@ -44,80 +47,18 @@ const filterGetSmsData = (
   });
 };
 
-
-// const filterGetSmsData = (
-//   numberStatus: FilteredGetSmsNS[],
-//   prices: FiteredGetSmsPrices[],
-//   serviceName?: string,
-// ) => {
-//   const uniqueResults = new Set(); // Для уникальности результатов
-
-//   return numberStatus.flatMap((el) => {
-//     const foundCountry = prices.find((price) => price.country === el.country);
-
-//     if (foundCountry) {
-//       return foundCountry.services
-//         .map((priceInfo) => {
-//           const status = numberStatus.find(
-//             (status) =>
-//               status.country === el.country &&
-//               status.service === priceInfo.service,
-//           );
-
-//           if (serviceName && priceInfo.service !== serviceName) {
-//             return null; // Игнорируем сервисы, не совпадающие с serviceName
-//           }
-
-//           if (status) {
-//             const result = {
-//               service: priceInfo.service,
-//               cost: priceInfo.cost,
-//               count: status.count,
-//             };
-
-//             // Добавляем результат в Set для предотвращения дублирования
-//             const resultString = JSON.stringify(result);
-//             if (!uniqueResults.has(resultString)) {
-//               uniqueResults.add(resultString);
-//               return result;
-//             }
-//             return null; // Возвращаем null, если уже добавили такой результат
-//           }
-//           return null; // Если нет данных о статусе
-//         })
-//         .filter((service) => service !== null); // Убираем null значения
-//     }
-//     return []; // Возвращаем пустой массив, если страна не найдена
-//   });
-// };
-
-// export const getSmsData = async (
-//   httpService: HttpService,
-//   configService: ConfigService,
-//   country?: string,
-//   serviceName?: string,
-// ) => {
-//   try {
-//     const numberStatus = await getSmsNumbersStatus(
-//       httpService,
-//       configService,
-//       country,
-//     );
-//     const prices = await getSmsPrices(httpService, configService);
-//     return filterGetSmsData(numberStatus, prices, serviceName);
-//   } catch (e) {
-//     console.log("getSmsData", e);
-//   }
-// };
-
 export const getSmsData = async (
   httpService: HttpService,
   configService: ConfigService,
   country?: string,
-  serviceName?: string
+  serviceName?: string,
 ) => {
   try {
-    const numberStatus = await getSmsNumbersStatus(httpService, configService, country);
+    const numberStatus = await getSmsNumbersStatus(
+      httpService,
+      configService,
+      country,
+    );
     const prices = await getSmsPrices(httpService, configService);
     return filterGetSmsData(numberStatus, prices, serviceName);
   } catch (error) {

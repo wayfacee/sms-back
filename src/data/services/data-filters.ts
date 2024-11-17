@@ -5,6 +5,7 @@ import type {
   CountryInfo,
   SmsakData,
   OnlineSimData,
+  SmsHubData,
 } from "../interfaces/country-info.interface";
 
 export const filterSmsLiveData = (
@@ -164,8 +165,6 @@ export const filterResponseData = (
     .filter((countryData) => countryData.services.length > 0);
 
 export const filterOnlineSimData = (data: OnlineSimData, country: string) => {
-  console.log(data.services);
-
   return Object.entries(data.services)
     .filter(
       ([_, { slug, price, count }]) =>
@@ -187,3 +186,31 @@ export const filterOnlineSimData = (data: OnlineSimData, country: string) => {
     })
     .filter((result) => result !== null);
 };
+
+export const filterSmsHubData = (
+  data: SmsHubData,
+  desiredServices: string[],
+) =>
+  Object.entries(data)
+    .map(([country, services]) => ({
+      country,
+      services: Object.entries(services)
+        .filter(([service]) => desiredServices.includes(service))
+        .map(([service, priceInfo]) => {
+          const serviceEntries = Object.entries(priceInfo)
+            .filter(([cost, count]) => count > 0 && Number(cost) > 0)
+            .map(([cost, count]) => ({
+              cost: Math.ceil(Number(cost)),
+              count: count,
+            }))
+            .sort((a, b) => a.cost - b.cost)
+            .slice(0, 3);
+
+          return {
+            service,
+            serviceInfo: serviceEntries,
+          };
+        })
+        .filter((entry) => entry.serviceInfo.length > 0),
+    }))
+    .filter((countryData) => countryData.services.length > 0);

@@ -9,6 +9,7 @@ import {
   filterSmsakData,
   filter5SIMData,
   filterOnlineSimData,
+  filterSmsHubData,
 } from "./services/data-filters";
 import {
   desiredServices,
@@ -22,6 +23,7 @@ import type {
   SmsakData,
   CountryInfo,
   OnlineSimData,
+  SmsHubData,
 } from "./interfaces/country-info.interface";
 import type { ServiceConfig } from "./interfaces/service-config.interface";
 
@@ -155,7 +157,8 @@ export class DataService {
       | Country5SIMInfo
       | SmsManData
       | SmsakData[]
-      | OnlineSimData,
+      | OnlineSimData
+      | SmsHubData,
     desiredServices: string[],
     country: string,
     service: string,
@@ -171,6 +174,8 @@ export class DataService {
         return filterSmsakData(data as SmsakData[], country, service);
       case "online-sim":
         return filterOnlineSimData(data as OnlineSimData, country);
+      case "sms-hub":
+        return filterSmsHubData(data as SmsHubData, desiredServices);
       default:
         return filterResponseData(data as CountryInfo, desiredServices);
     }
