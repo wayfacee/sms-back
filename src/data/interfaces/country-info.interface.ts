@@ -30,18 +30,6 @@ export interface IronSimData {
   }[];
 }
 
-export interface OnlineSimData {
-  [services: string]: {
-    [service: string]: {
-      id: number;
-      count: number;
-      price: number;
-      serviceName: string;
-      slug: string;
-    };
-  };
-}
-
 export interface SmsManData {
   [service: string]: {
     cost: number;
@@ -76,4 +64,36 @@ export interface SmsakData {
   count: number;
   cost: number;
   all: string;
+}
+
+export interface OnlineSimData {
+  response: string;
+  countries: {
+    [countryId: string]: {
+      name: string;
+      original: string;
+      code: number;
+      pos: number;
+      other: boolean;
+      new: boolean;
+      enable: boolean;
+    };
+  };
+  services: {
+    [serviceCode: string]: {
+      id: number;
+      count: number;
+      price: string;
+      service: string;
+      slug: string;
+    };
+  };
+  favorite_countries: any;
+  favorite_services: any[];
+  page: number;
+  country: number;
+  filter: string;
+  subscription_tariffs: any[];
+  end: boolean;
+  favorites: any;
 }

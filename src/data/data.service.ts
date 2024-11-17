@@ -8,10 +8,12 @@ import {
   filterResponseData,
   filterSmsakData,
   filter5SIMData,
+  filterOnlineSimData,
 } from "./services/data-filters";
 import {
   desiredServices,
   getServiceConfigs,
+  onlineSimServices,
 } from "./constants/service-configs";
 import { getSmsData } from "./services/get-sms/get-sms-func";
 import type {
@@ -19,6 +21,7 @@ import type {
   SmsManData,
   SmsakData,
   CountryInfo,
+  OnlineSimData,
 } from "./interfaces/country-info.interface";
 import type { ServiceConfig } from "./interfaces/service-config.interface";
 
@@ -39,6 +42,12 @@ export class DataService {
     country: string,
   ): string | undefined {
     return countryMappings[serviceName]?.[country];
+  }
+
+  private getServiceOnlineSim(serviceName: string) {
+    return Object.keys(onlineSimServices).find(
+      (key) => onlineSimServices[key] === serviceName,
+    );
   }
 
   private generateCacheKey(
@@ -94,12 +103,20 @@ export class DataService {
       const params =
         config.name === "smsak"
           ? { code: countryParam }
-          : {
-              api_key: config.apiKey,
-              action: config.action || "getPrices",
-              country: countryParam,
-              ...(config.name === "5sim" ? { product: service } : { service }),
-            };
+          : config.name === "online-sim"
+            ? {
+                api_key: config.apiKey,
+                filter_country: country,
+                filter_service: this.getServiceOnlineSim(service),
+              }
+            : {
+                api_key: config.apiKey,
+                action: config.action || "getPrices",
+                country: countryParam,
+                ...(config.name === "5sim"
+                  ? { product: service }
+                  : { service }),
+              };
 
       try {
         const response = await this.httpService
@@ -133,7 +150,12 @@ export class DataService {
 
   private filterData(
     serviceName: string,
-    data: CountryInfo | Country5SIMInfo | SmsManData | SmsakData[],
+    data:
+      | CountryInfo
+      | Country5SIMInfo
+      | SmsManData
+      | SmsakData[]
+      | OnlineSimData,
     desiredServices: string[],
     country: string,
     service: string,
@@ -147,6 +169,8 @@ export class DataService {
         return filterSmsManData(data as SmsManData, desiredServices, country);
       case "smsak":
         return filterSmsakData(data as SmsakData[], country, service);
+      case "online-sim":
+        return filterOnlineSimData(data as OnlineSimData, country);
       default:
         return filterResponseData(data as CountryInfo, desiredServices);
     }

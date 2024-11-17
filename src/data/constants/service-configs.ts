@@ -69,15 +69,15 @@ export const getServiceConfigs = (
     // url: 'http://api.getsms.online/stubs/handler_api.php', // id
     // apiKey: configService.get<string>('VITE_GET_SMS'), // ru kz done, возв. тока стоимость
   },
+  {
+    name: "online-sim",
+    url: "https://onlinesim.io/api/getTariffs.php",
+    apiKey: configService.get<string>("VITE_ONLINE_SIM"),
+  },
   // {
   //   name: "ironsim",
   //   url: "https://ironsim.com/api/service/list",
   //   apiKey: configService.get<string>("VITE_IRONSIM"),
-  // },
-  // {
-  //   name: 'onlinesim',
-  //   url: 'https://onlinesim.io/ru',
-  //   apiKey: configService.get<string>('VITE_ONLINE_SIM'),
   // },
   // {
   //   name: 'cheapsms',
@@ -89,3 +89,11 @@ export const getServiceConfigs = (
 ];
 
 export const desiredServices = ["tg", "ig", "vk", "wa", "go", "vb", "ds"];
+export const onlineSimServices = {
+  telegram: "tg",
+  instagram: "ig",
+  vkcom: "vk",
+  whatsapp: "wa",
+  google: "go",
+  viber: "vb",
+};
