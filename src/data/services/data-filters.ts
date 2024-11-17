@@ -200,7 +200,7 @@ export const filterSmsHubData = (
           const serviceEntries = Object.entries(priceInfo)
             .filter(([cost, count]) => count > 0 && Number(cost) > 0)
             .map(([cost, count]) => ({
-              cost: Math.ceil(Number(cost)),
+              cost: Math.ceil(Number(cost) * 97),
               count: count,
             }))
             .sort((a, b) => a.cost - b.cost)

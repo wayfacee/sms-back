@@ -16,7 +16,6 @@ import {
   getServiceConfigs,
   onlineSimServices,
 } from "./constants/service-configs";
-import { getSmsData } from "./services/get-sms/get-sms-func";
 import type {
   Country5SIMInfo,
   SmsManData,
@@ -87,17 +86,17 @@ export class DataService {
       }
 
       let responseData;
-      if (config.name === "get-sms") {
-        responseData = await getSmsData(
-          this.httpService,
-          this.configService,
-          countryParam,
-          service,
-        );
-        const filteredData = { country: countryParam, services: responseData };
-        this.cache.set(cacheKey, filteredData); // Сохранение в кэш
-        return { name: config.name, data: filteredData };
-      }
+      // if (config.name === "get-sms") {
+      //   responseData = await getSmsData(
+      //     this.httpService,
+      //     this.configService,
+      //     countryParam,
+      //     service,
+      //   );
+      //   const filteredData = { country: countryParam, services: responseData };
+      //   this.cache.set(cacheKey, filteredData); // Сохранение в кэш
+      //   return { name: config.name, data: filteredData };
+      // }
 
       const url =
         config.name === "smsak" ? `${config.url}/${config.apiKey}` : config.url;
@@ -110,6 +109,7 @@ export class DataService {
                 api_key: config.apiKey,
                 filter_country: country,
                 filter_service: this.getServiceOnlineSim(service),
+                locale_price: "RUB",
               }
             : {
                 api_key: config.apiKey,

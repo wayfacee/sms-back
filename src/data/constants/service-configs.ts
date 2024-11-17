@@ -64,11 +64,11 @@ export const getServiceConfigs = (
     url: "https://smshub.org/stubs/handler_api.php",
     apiKey: configService.get<string>("VITE_SMS_HUB"),
   },
-  {
-    name: "get-sms",
-    // url: 'http://api.getsms.online/stubs/handler_api.php', // id
-    // apiKey: configService.get<string>('VITE_GET_SMS'), // ru kz done, возв. тока стоимость
-  },
+  // {
+  // name: "get-sms",
+  // url: 'http://api.getsms.online/stubs/handler_api.php', // id
+  // apiKey: configService.get<string>('VITE_GET_SMS'), // ru kz done, возв. тока стоимость
+  // },
   {
     name: "online-sim",
     url: "https://onlinesim.io/api/getTariffs.php",
