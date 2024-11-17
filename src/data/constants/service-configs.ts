@@ -62,7 +62,7 @@ export const getServiceConfigs = (
   {
     name: "sms-hub",
     url: "https://smshub.org/stubs/handler_api.php",
-    apiKey: configService.get<string>("VITE_SMSAK"),
+    apiKey: configService.get<string>("VITE_SMS_HUB"),
   },
   {
     name: "get-sms",
